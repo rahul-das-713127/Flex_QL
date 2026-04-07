@@ -3,8 +3,8 @@
 ## 10,000,000 Row Insertion Benchmark
 - **Target Rows**: 10,000,000
 - **Batch Size**: 1 (Single-row INSERTs)
-- **Elapsed Time**: 10,366 ms
-- **Throughput**: 964,692 rows/sec
+- **Elapsed Time**: 9151 ms
+- **Throughput**: 1,092,776 rows/sec
 
 ## Unit Test Results
 - **Total Tests**: 21
