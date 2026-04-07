@@ -120,11 +120,10 @@ To reduce syscalls and improve throughput:
 On startup, the server may wipe \texttt{data/} depending on environment variables.
 
 \begin{itemize}[leftmargin=*]
-\item If \texttt{FLEXQL\_PRESERVE\_DATA=1} is \emph{not} set, the server wipes the data directory on start.
-\item If \texttt{FLEXQL\_PRESERVE\_DATA=1} \emph{is} set, the server preserves existing on-disk data (including WAL/catalog).
+\item The default and current behavior is to wipe the \texttt{data/} directory on every server start (fresh database per run).
 \end{itemize}
 
-This provides an explicit toggle between ``fresh DB per start'' and ``persistent DB across restarts''.
+This behavior ensures benchmarks and REPL sessions start from a clean database state unless the code is changed.
 
 \section{Write-Ahead Log (WAL)}
 \subsection{Purpose}
@@ -203,6 +202,10 @@ Validation is applied for both:
 \item Fast insert path
 \item Ultra-fast bulk insert path
 \end{itemize}
+
+The server supports \textbf{multi-row inserts} of the form:
+\texttt{INSERT INTO T VALUES (..),(..),(..);}
+which allows client-side batching to reduce round trips.
 
 \subsection{SELECT}
 SELECT supports:

@@ -68,9 +68,6 @@ The server listens on `127.0.0.1:9000`.
 
 ### Environment variables
 
-- `FLEXQL_PRESERVE_DATA=1`
-  - Preserve `data/` across restarts.
-  - If not set, the server wipes `data/` on startup.
 - `FLEXQL_ENABLE_WAL=1`
   - Enable write-ahead logging (`data/wal.log`).
 - `FLEXQL_DISABLE_WAL=1`
@@ -79,8 +76,12 @@ The server listens on `127.0.0.1:9000`.
 Example (preserve data + enable WAL):
 
 ```bash
-FLEXQL_PRESERVE_DATA=1 FLEXQL_ENABLE_WAL=1 ./server
+FLEXQL_ENABLE_WAL=1 ./server
 ```
+
+Notes:
+
+- The current server behavior is to start with a **fresh database on every server start** (it wipes `data/` on startup).
 
 ## Running the REPL client
 
@@ -111,6 +112,18 @@ SELECT * FROM USERS;
 
 ```bash
 ./benchmark 10000000
+```
+
+You can tune client-side batching (multi-row `INSERT`) with:
+
+```bash
+FLEXQL_INSERT_BATCH_SIZE=200 ./benchmark 10000000
+```
+
+This controls how many rows are emitted per statement:
+
+```sql
+INSERT INTO BIG_USERS VALUES (...),(...),(...);
 ```
 
 Notes:

@@ -3124,10 +3124,7 @@ int main() {
 
     ensure_data_dir();
 
-    const char *preserve = std::getenv("FLEXQL_PRESERVE_DATA");
-    if (!(preserve && preserve[0] == '1')) {
-        wipe_data_dir_best_effort();
-    }
+    wipe_data_dir_best_effort();
 
     const char *enable_wal = std::getenv("FLEXQL_ENABLE_WAL");
     if (enable_wal && std::string(enable_wal) != "0") {

@@ -248,7 +248,17 @@ static bool run_insert_benchmark(FlexQL *db, long long target_rows) {
         return false;
     }
 
+    int batch_size = INSERT_BATCH_SIZE;
+    const char *bs = std::getenv("FLEXQL_INSERT_BATCH_SIZE");
+    if (bs && *bs) {
+        long long v = atoll(bs);
+        if (v > 0 && v <= 1000000) {
+            batch_size = (int)v;
+        }
+    }
+
     cout << "\nStarting insertion benchmark for " << target_rows << " rows...\n";
+    cout << "INSERT_BATCH_SIZE used: " << batch_size << "\n";
     auto bench_start = high_resolution_clock::now();
 
     long long inserted = 0;
@@ -263,7 +273,7 @@ static bool run_insert_benchmark(FlexQL *db, long long target_rows) {
         ss << "INSERT INTO BIG_USERS VALUES ";
 
         int in_batch = 0;
-        while (in_batch < INSERT_BATCH_SIZE && inserted < target_rows) {
+        while (in_batch < batch_size && inserted < target_rows) {
             long long id = inserted + 1;
             ss << "(" << id
                << ", 'user" << id << "'"
@@ -272,7 +282,7 @@ static bool run_insert_benchmark(FlexQL *db, long long target_rows) {
                << ", 1893456000)";
             inserted++;
             in_batch++;
-            if (in_batch < INSERT_BATCH_SIZE && inserted < target_rows) {
+            if (in_batch < batch_size && inserted < target_rows) {
                 ss << ",";
             }
         }
