@@ -158,7 +158,7 @@ static bool recv_line(int sock, std::string &out_line, std::string &pending, siz
             return true;
         }
 
-        char buf[4096];
+        char buf[64 * 1024];
         ssize_t n = ::recv(sock, buf, sizeof(buf), 0);
         if (n < 0) {
             if (errno == EINTR) {

@@ -1820,8 +1820,7 @@ static void ensure_runtime_for_table(const TableSchema &schema) {
         }
         rt.has_int_pk_index = true;
         rt.pk_col = i;
-        rt.pk_index_valid = false;
-        break;
+        rt.pk_index_valid = false;  // mark stale; rebuild on next SELECT
     }
 
     g_db.runtime[tkey] = std::move(rt);
@@ -2084,6 +2083,16 @@ static bool exec_select(const std::string &sql, int client_socket, std::string &
     // Flush dirty cache from any inserts before running a SELECT.
     cache_check_dirty();
 
+    std::string row_outbuf;
+    row_outbuf.reserve(256u * 1024u);
+    static constexpr size_t kRowOutFlushBytes = 1u * 1024u * 1024u;
+    auto flush_row_outbuf = [&]() {
+        if (client_socket >= 0 && !row_outbuf.empty()) {
+            send_text(client_socket, row_outbuf);
+            row_outbuf.clear();
+        }
+    };
+
     std::string s = trim(sql);
     if (!starts_with_ci(s, "SELECT ")) {
         err = "Malformed SELECT";
@@ -2271,7 +2280,10 @@ static bool exec_select(const std::string &sql, int client_socket, std::string &
             row += value;
         }
         row += "\n";
-        send_text(client_socket, row);
+        row_outbuf += row;
+        if (row_outbuf.size() >= kRowOutFlushBytes) {
+            flush_row_outbuf();
+        }
         maybe_cache_line(row);
     };
 
@@ -2379,6 +2391,7 @@ static bool exec_select(const std::string &sql, int client_socket, std::string &
                                 cache_put(sql, cache_lines, cache_bytes);
                             }
                         }
+                        flush_row_outbuf();
                         return true;
                     }
                 }
@@ -2397,11 +2410,14 @@ static bool exec_select(const std::string &sql, int client_socket, std::string &
             return build_row(names, row);
         }, err);
 
+        flush_row_outbuf();
+
         if (ok && client_socket >= 0) {
             if (cache_bytes <= g_db.cache_bytes_limit / 2) {
                 cache_put(sql, cache_lines, cache_bytes);
             }
         }
+        flush_row_outbuf();
         return ok;
     }
 
@@ -2648,6 +2664,7 @@ static bool exec_select(const std::string &sql, int client_socket, std::string &
         }
     }
 
+    flush_row_outbuf();
     return ok;
 }
 
