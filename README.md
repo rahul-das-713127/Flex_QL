@@ -66,23 +66,6 @@ In one terminal:
 
 The server listens on `127.0.0.1:9000`.
 
-### Environment variables
-
-- `FLEXQL_ENABLE_WAL=1`
-  - Enable write-ahead logging (`data/wal.log`).
-- `FLEXQL_DISABLE_WAL=1`
-  - Force WAL disabled.
-
-Example (preserve data + enable WAL):
-
-```bash
-FLEXQL_ENABLE_WAL=1 ./server
-```
-
-Notes:
-
-- The current server behavior is to start with a **fresh database on every server start** (it wipes `data/` on startup).
-
 ## Running the REPL client
 
 In another terminal:
@@ -91,14 +74,6 @@ In another terminal:
 ./client
 ```
 
-Example session:
-
-```sql
-CREATE TABLE USERS(ID INT, NAME VARCHAR(64), EXPIRES_AT DATETIME);
-INSERT INTO USERS VALUES (1, 'Alice', 1893456000);
-SELECT * FROM USERS;
-.exit
-```
 
 ## Running the benchmark
 
@@ -113,30 +88,6 @@ SELECT * FROM USERS;
 ```bash
 ./benchmark 10000000
 ```
-
-You can tune client-side batching (multi-row `INSERT`) with:
-
-```bash
-FLEXQL_INSERT_BATCH_SIZE=200 ./benchmark 10000000
-```
-
-This controls how many rows are emitted per statement:
-
-```sql
-INSERT INTO BIG_USERS VALUES (...),(...),(...);
-```
-
-Notes:
-
-- The benchmark connects to `127.0.0.1:9000`.
-- It prints progress and reports throughput (rows/sec).
-
-## Storage model (high level)
-
-- Persistent state lives under `data/`.
-- Table rows are appended to per-table `*.data` files.
-- `catalog.txt` stores schemas.
-- If WAL is enabled, SQL statements are appended to `wal.log` and replayed on startup.
 
 ## Troubleshooting
 
@@ -165,14 +116,3 @@ lsof -iTCP:9000 -sTCP:LISTEN -n -P
 kill <PID>
 ```
 
-### Reset the database
-
-If you want a clean database state:
-
-- Stop the server
-- Delete the `data/` directory contents (or just unset `FLEXQL_PRESERVE_DATA` and restart)
-
-## Documentation
-
-- Detailed design: `design.tex`
-- Performance results: `results.md`
