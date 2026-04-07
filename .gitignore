@@ -1,0 +1,6 @@
+data/
+server
+client
+benchmark
+benchmark_big_users
+*.db
